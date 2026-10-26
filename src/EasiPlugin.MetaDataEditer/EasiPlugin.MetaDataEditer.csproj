@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
+    <!-- 用 Microsoft.NET.Sdk 而不是 Microsoft.NET.Sdk.WindowsDesktop：
+         .NET 6 起 WPF/Windows Forms 已并入主 SDK，WindowsDesktop SDK 标记只是历史遗留。
+         WPF 由下面的 UseWPF 显式启用。 -->
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <AssemblyName>EasiPlugin.MetaDataEditer</AssemblyName>
+    <!-- SDK 生成代码使用 EasiPlugin 类型名，命名空间加作者前缀以避免名称冲突。 -->
+    <RootNamespace>Mcitem.EasiPlugin.MetaDataEditer</RootNamespace>
+    <PackageId>EasiPlugin.MetaDataEditer</PackageId>
+    <ENPackageId>EasiPlugin.MetaDataEditer</ENPackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <Product>希沃白板元数据编辑器</Product>
+    <Description>查看和编辑课件元素的元数据，包括超链接、位置尺寸及文字属性；支持分类搜索与只读属性查看。</Description>
+
+    <!-- 引用 EasiNote 的默认级别：
+          - none: 无任何 EasiNote 依赖
+          - api: 仅 API 和 API 的依赖
+          - core: 包含大多数功能的程序集（不含扩展功能）
+          - most: 绝大多数程序集（包含扩展功能）
+          - all: 所有会加载到 EasiNote 进程的托管程序集 -->
+    <UseEasiNote>core</UseEasiNote>
+
+    <!-- 目标框架必须与宿主运行时对齐，不能因为「net6 已停止支持」就升级。
+         希沃白板 5.2.4 自身跑在 .NET 6 上，插件程序集由宿主进程加载：
+         目标框架高于宿主运行时时，CLR 无法解析插件依赖的运行时版本，插件会直接加载失败。
+         NETSDK1138 只是「不再收到安全更新」的告知，与插件能否工作无关，因此在这里屏蔽。
+         升级目标框架的前提是宿主先升级到对应的运行时。 -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- 发布插件不附带含本机源码路径的调试符号。 -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dotnetCampus.EasiPlugin.Sdk" Version="2.1.1-alpha.4" />
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- 安装完成后显示环境信息与使用提示，只配置本项目实际使用的 postinstall 回调。 -->
+    <ENSdkPostinstallAction>postinstall</ENSdkPostinstallAction>
+
+    <!-- 把程序集入口点指向自己写的 InstallEntryPoint。
+         SDK 的源生成器也会注入一个 Cvte.EasiNote.Extensions.AssemblyProvider.Main，
+         显式指定 StartupObject 之后启动器走的是我们自己的入口，生成的那个仍然保留给宿主反射加载用。 -->
+    <StartupObject>Mcitem.EasiPlugin.MetaDataEditer.InstallEntryPoint</StartupObject>
+  </PropertyGroup>
+</Project>

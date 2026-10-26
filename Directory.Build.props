@@ -1,0 +1,12 @@
+<Project>
+  <Import Project="build\Version.props" />
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)</PackageOutputPath>
+    <Company>mcitem</Company>
+
+    <Author>mcitem</Author>
+    <Authors>mcitem</Authors>
+    <Copyright>Copyright (c) 2026 mcitem. Third-party materials retain their original rights.</Copyright>
+  </PropertyGroup>
+</Project>

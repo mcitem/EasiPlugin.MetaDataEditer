@@ -1,0 +1,159 @@
+<controls:SafeWindow x:Class="Mcitem.EasiPlugin.MetaDataEditer.ElementMetadataWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Cvte.Windows.Controls;assembly=Cvte.Windows.cc"
+    Title="元素元数据" Width="1040" Height="740" MinWidth="820" MinHeight="560"
+    WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResize"
+    SnapsToDevicePixels="True" UseLayoutRounding="True" FontSize="13"
+    Style="{DynamicResource Style.ShadowDialog}">
+    <controls:SafeWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanVisibility" />
+        <Style x:Key="Caption" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Faint}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style x:Key="CellText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="8,4" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+        </Style>
+        <!-- 固定控件盒模型，避免宿主隐式样式使按钮与编辑框缩成文字大小。 -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="MinWidth" Value="100" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="ValueEditor" TargetType="TextBox">
+            <Setter Property="Margin" Value="5,4" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderBrush.Lighter}" />
+            <Setter Property="ToolTip" Value="{Binding Description}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasError}" Value="True">
+                    <Setter Property="BorderBrush" Value="#C83B32" />
+                    <Setter Property="ToolTip" Value="{Binding ErrorText}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </controls:SafeWindow.Resources>
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="{Binding ElementTitle}" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding ElementIdentity}" Margin="0,6,0,0" Style="{StaticResource Caption}" ToolTip="{Binding ElementIdentity}" />
+            <TextBlock Text="{Binding Summary}" Margin="0,6,0,0" Style="{StaticResource Caption}" />
+        </StackPanel>
+        <Grid Grid.Row="1" Margin="0,18,0,12" IsEnabled="{Binding CanEdit}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" Height="32" VerticalContentAlignment="Center" />
+            <Grid Grid.Column="1" Margin="12,0,16,0">
+                <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}" Height="32" Padding="8,4" VerticalContentAlignment="Center" />
+                <TextBlock Text="搜索名称、路径或类型…" Margin="10,0" IsHitTestVisible="False" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers><DataTrigger Binding="{Binding FilterText}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+            <CheckBox Grid.Column="2" Content="仅可编辑" IsChecked="{Binding OnlyEditable}" VerticalAlignment="Center" Margin="0,0,16,0" />
+            <CheckBox Grid.Column="3" Content="仅已修改" IsChecked="{Binding OnlyModified}" VerticalAlignment="Center" />
+        </Grid>
+        <Grid Grid.Row="2">
+            <DataGrid ItemsSource="{Binding Fields}" SelectedItem="{Binding SelectedField}" AutoGenerateColumns="False" IsEnabled="{Binding CanEdit}"
+                CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+                HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.BorderBrush.Lighter}"
+                BorderBrush="{DynamicResource Brush.BorderBrush.Lighter}" BorderThickness="1" SelectionMode="Single"
+                RowHeaderWidth="0" ColumnHeaderHeight="34" MinRowHeight="48" EnableRowVirtualization="True"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled" IsReadOnly="True">
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader"><Setter Property="Padding" Value="10,8" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+                    <Style TargetType="DataGridCell"><Setter Property="BorderThickness" Value="0" /><Setter Property="FocusVisualStyle" Value="{x:Null}" /></Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="属性" Width="2.2*" MinWidth="180">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                            <StackPanel Margin="8,6">
+                                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Path}" Style="{StaticResource Caption}" ToolTip="{Binding Path}" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="类型" Binding="{Binding TypeDisplayName}" Width="1*" MinWidth="90" ElementStyle="{StaticResource CellText}" />
+                    <DataGridTextColumn Header="原始值" Binding="{Binding OriginalText}" Width="1.4*" MinWidth="100" ElementStyle="{StaticResource CellText}" />
+                    <DataGridTemplateColumn Header="当前值" Width="1.6*" MinWidth="130">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                            <Grid>
+                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ValueEditor}">
+                                    <TextBox.Visibility><Binding Path="IsEditable" Converter="{StaticResource BooleanVisibility}" /></TextBox.Visibility>
+                                </TextBox>
+                                <TextBlock Text="{Binding Value}" ToolTip="{Binding ReadOnlyReason}">
+                                    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                        <Setter Property="Visibility" Value="Collapsed" /><Setter Property="Opacity" Value="0.6" />
+                                        <Style.Triggers><DataTrigger Binding="{Binding IsReadOnly}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                    </Style></TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="状态" Width="78">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                            <TextBlock Text="{Binding StatusText}" ToolTip="{Binding Description}">
+                                <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReadOnly}" Value="True"><Setter Property="Opacity" Value="0.55" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding IsModified}" Value="True"><Setter Property="Foreground" Value="{DynamicResource Brush.Text.Accent.Normal}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding HasError}" Value="True"><Setter Property="Foreground" Value="#C83B32" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style></TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock Text="没有符合条件的属性" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers><DataTrigger Binding="{Binding VisibleCount}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                </Style></TextBlock.Style>
+            </TextBlock>
+        </Grid>
+        <Border Grid.Row="3" Padding="12,10" Margin="0,10,0,0" Background="{DynamicResource Brush.Background.Lightest}">
+            <StackPanel>
+                <TextBlock Text="{Binding SelectedField.Path, TargetNullValue=选择属性查看详情}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding SelectedField.Path}" />
+                <TextBlock Text="{Binding SelectedField.Description}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                <TextBlock Text="{Binding SelectedField.ErrorText}" Foreground="#C83B32" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+        <Grid Grid.Row="4" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="保存更改后，请再保存课件。" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="还原全部" Command="{Binding RevertCommand}" Style="{StaticResource ActionButton}" Margin="0,0,8,0" />
+                <Button Content="取消" Command="{Binding CancelCommand}" IsCancel="True" Style="{StaticResource ActionButton}" Margin="0,0,8,0" />
+                <Button Content="保存更改" Command="{Binding SaveCommand}" MinWidth="110" Height="34" Padding="16,0" FontSize="13" Style="{DynamicResource Style.AccentButton}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</controls:SafeWindow>
